@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Professional Multi Page Marks Sheet</title>
+
+<style>
+@page{
+  size:A4;
+  margin:15mm;
+}
+
+body{
+  font-family:Arial, sans-serif;
+  background:#eaeaea;
+}
+
+.page{
+  width:210mm;
+  min-height:297mm;
+  background:#fff;
+  margin:auto;
+  padding:15px;
+  page-break-after:always;
+}
+
+.header{
+  text-align:center;
+  margin-bottom:15px;
+}
+
+.tables{
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+}
+
+.side{
+  width:48%;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+th,td{
+  border:1px solid #000;
+  padding:5px;
+  text-align:center;
+  height:26px;
+}
+
+/* HEADER ROW COLORS */
+th.roll-head{
+  background:#1565c0;
+  color:#fff;
+}
+
+th.no-head{
+  background:#bbdefb;
+}
+
+th.marks-head{
+  background:#000;
+  color:#fff;
+}
+
+/* DATA COLORS */
+.roll{
+  background:#1565c0;
+  color:#fff;
+  font-weight:bold;
+}
+
+.no{
+  background:#bbdefb;
+}
+
+.marks{
+  font-weight:bold;
+}
+
+.red{
+  background:#ffcccc;
+  color:red;
+  font-weight:bold;
+}
+
+.control{
+  text-align:center;
+  margin:15px;
+}
+
+@media print{
+  body{
+    background:#fff;
+  }
+  .control{
+    display:none;
+  }
+
+  th, td{
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .red{
+    background:none !important;
+    color:red !important;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="control">
+  <input type="text" id="entry" placeholder="Example: 123|45-50|56">
+  <button onclick="addData()">Add</button>
+  <button onclick="lastSwitch()">Last Correction</button>
+  <button onclick="window.print()">Print</button>
+</div>
+
+<div id="pagesContainer"></div>
+
+<script>
+
+const firstPageRows = 27;
+const otherPageRows = 30;
+let savedEntries = [];
+
+function parseInput(input){
+  let roll="", no="", marks="";
+  let redMark=false;
+
+  if(input.includes("|")){
+    let parts = input.split("|");
+
+    if(parts.length===3){
+      roll = parts[0];
+      no = parts[1];
+      marks = parts[2];
+    }else if(parts.length===2){
+      no = parts[0];
+      marks = parts[1];
+    }
+
+    if(no.includes("-")){
+      let r = no.split("-");
+      no = r[0]+" - "+r[1];
+    }
+
+    if(input.includes("*")){
+      redMark=true;
+      no=no.replace(/\*/g,"");
+      marks="AB";
+    }
+
+  }else{
+    marks=input;
+  }
+
+  return {roll,no,marks,redMark};
+}
+
+function addData(){
+  let val=document.getElementById("entry").value.trim();
+  if(!val) return;
+
+  savedEntries.push(parseInput(val));
+  renderPages();
+  document.getElementById("entry").value="";
+}
+
+/* ✅ LAST CORRECTION SWITCH */
+function lastSwitch(){
+  if(savedEntries.length===0) return;
+
+  let last = savedEntries.pop();
+
+  if(last.roll){
+    document.getElementById("entry").value =
+      last.roll + "|" + last.no + "|" + last.marks;
+  }else{
+    document.getElementById("entry").value =
+      last.no + "|" + last.marks;
+  }
+
+  renderPages();
+}
+
+function renderPages(){
+
+  const container=document.getElementById("pagesContainer");
+  container.innerHTML="";
+
+  let index=0;
+  let pageNumber=0;
+
+  while(index < savedEntries.length || pageNumber===0){
+
+    let rowsPerSide = pageNumber===0 ? firstPageRows : otherPageRows;
+
+    let page=document.createElement("div");
+    page.className="page";
+
+    if(pageNumber===0){
+      let header=document.createElement("div");
+      header.className="header";
+      header.innerHTML="<h2>ANOWAR HOSSAIN MOLLA</h2><h3>MARKS ENTRY SHEET</h3>";
+      page.appendChild(header);
+    }
+
+    let tables=document.createElement("div");
+    tables.className="tables";
+
+    tables.appendChild(createTable(rowsPerSide,index));
+    index+=rowsPerSide;
+
+    tables.appendChild(createTable(rowsPerSide,index));
+    index+=rowsPerSide;
+
+    page.appendChild(tables);
+    container.appendChild(page);
+
+    pageNumber++;
+  }
+}
+
+function createTable(rows,startIndex){
+
+  let side=document.createElement("div");
+  side.className="side";
+
+  let table=document.createElement("table");
+
+  let thead=document.createElement("thead");
+  thead.innerHTML=`
+    <tr>
+      <th class="roll-head">Roll</th>
+      <th class="no-head">No</th>
+      <th class="marks-head">Marks Obtained</th>
+    </tr>`;
+  table.appendChild(thead);
+
+  let tbody=document.createElement("tbody");
+
+  for(let i=0;i<rows;i++){
+
+    let tr=document.createElement("tr");
+    let data=savedEntries[startIndex+i];
+
+    for(let j=0;j<3;j++){
+      tr.appendChild(document.createElement("td"));
+    }
+
+    if(data){
+      tr.cells[0].textContent=data.roll;
+      tr.cells[1].textContent=data.no;
+      tr.cells[2].textContent=data.marks;
+
+      tr.cells[0].className="roll";
+      tr.cells[1].className="no";
+      tr.cells[2].className="marks";
+
+      if(data.redMark){
+        tr.cells[1].classList.add("red");
+      }
+    }
+
+    tbody.appendChild(tr);
+  }
+
+  table.appendChild(tbody);
+  side.appendChild(table);
+
+  return side;
+}
+
+renderPages();
+
+</script>
+
+</body>
+</html>
