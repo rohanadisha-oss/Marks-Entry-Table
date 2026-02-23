@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Professional Multi Page Marks Sheet</title>
+<title>Multi Page Marks Entry Sheet</title>
 
 <style>
 @page{
@@ -116,7 +116,7 @@ th.marks-head{
 <body>
 
 <div class="control">
-  <input type="text" id="entry" placeholder="Example: 123|45-50|56">
+  <input type="text" id="entry" placeholder="Example: 123|45|56,54|56,*25|">
   <button onclick="addData()">Add</button>
   <button onclick="lastSwitch()">Last Correction</button>
   <button onclick="window.print()">Print</button>
@@ -208,7 +208,7 @@ function renderPages(){
     if(pageNumber===0){
       let header=document.createElement("div");
       header.className="header";
-      header.innerHTML="<h2>ANOWAR HOSSAIN MOLLA</h2><h3>MARKS ENTRY SHEET</h3>";
+      header.innerHTML="<h2>ANOWAR HOSSAIN MOLLA</h2><h3>SL NO:56 PACKET:</h3><h3>MARKS ENTRY SHEET</h3>";
       page.appendChild(header);
     }
 
