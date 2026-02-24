@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Multi Page Marks Entry Sheet</title>
+<title>Professional Multi Page Marks Sheet</title>
 
 <style>
 @page{
@@ -27,6 +27,9 @@ body{
 .header{
   text-align:center;
   margin-bottom:15px;
+  padding:10px;
+  background:#e3f2fd;   /* Light Blue */
+  border:1px solid #90caf9;
 }
 
 .tables{
@@ -51,7 +54,6 @@ th,td{
   height:26px;
 }
 
-/* HEADER ROW COLORS */
 th.roll-head{
   background:#1565c0;
   color:#fff;
@@ -66,7 +68,6 @@ th.marks-head{
   color:#fff;
 }
 
-/* DATA COLORS */
 .roll{
   background:#1565c0;
   color:#fff;
@@ -92,13 +93,15 @@ th.marks-head{
   margin:15px;
 }
 
+textarea{
+  width:300px;
+  height:120px;
+  padding:5px;
+}
+
 @media print{
-  body{
-    background:#fff;
-  }
-  .control{
-    display:none;
-  }
+  body{ background:#fff; }
+  .control{ display:none; }
 
   th, td{
     -webkit-print-color-adjust: exact;
@@ -116,10 +119,35 @@ th.marks-head{
 <body>
 
 <div class="control">
-  <input type="text" id="entry" placeholder="Example: 123|45|56,54|56,*25|">
+
+  <!-- NEW HEADER INPUT -->
+  <input type="text" id="headerInput"
+  placeholder="Example: ANOWAR HOSSAIN MOLLA|56|50"
+  style="width:350px;">
+  <button onclick="updateHeader()">Set Header</button>
+
+  <br><br>
+
+  <!-- ORIGINAL SIMPLE INPUT -->
+  <input type="text" id="entry" placeholder="Example: 123|45-50|56">
   <button onclick="addData()">Add</button>
+
+  <br><br>
+
+  <!-- BULK INPUT -->
+  <textarea id="bulkInput" placeholder="Paste multiple lines:
+123|23|35
+23|35
+*23|
+25"></textarea>
+  <br>
+  <button onclick="addBulkData()">Add Bulk</button>
+
+  <br><br>
+
   <button onclick="lastSwitch()">Last Correction</button>
   <button onclick="window.print()">Print</button>
+
 </div>
 
 <div id="pagesContainer"></div>
@@ -130,6 +158,26 @@ const firstPageRows = 27;
 const otherPageRows = 30;
 let savedEntries = [];
 
+let headerName = "ANOWAR HOSSAIN MOLLA";
+let headerSL = "";
+let headerPacket = "";
+
+/* HEADER UPDATE */
+function updateHeader(){
+  let val = document.getElementById("headerInput").value.trim();
+  if(!val) return;
+
+  let parts = val.split("|");
+
+  headerName = parts[0] || "";
+  headerSL = parts[1] || "";
+  headerPacket = parts[2] || "";
+
+  renderPages();
+  document.getElementById("headerInput").value="";
+}
+
+/* ORIGINAL PARSE LOGIC (UNCHANGED) */
 function parseInput(input){
   let roll="", no="", marks="";
   let redMark=false;
@@ -173,7 +221,22 @@ function addData(){
   document.getElementById("entry").value="";
 }
 
-/* ✅ LAST CORRECTION SWITCH */
+function addBulkData(){
+  let bulkText=document.getElementById("bulkInput").value.trim();
+  if(!bulkText) return;
+
+  let lines = bulkText.split("\n");
+
+  lines.forEach(line=>{
+    if(line.trim()){
+      savedEntries.push(parseInput(line.trim()));
+    }
+  });
+
+  renderPages();
+  document.getElementById("bulkInput").value="";
+}
+
 function lastSwitch(){
   if(savedEntries.length===0) return;
 
@@ -208,7 +271,10 @@ function renderPages(){
     if(pageNumber===0){
       let header=document.createElement("div");
       header.className="header";
-      header.innerHTML="<h2>ANOWAR HOSSAIN MOLLA</h2><h3>SL NO:56 PACKET:</h3><h3>MARKS ENTRY SHEET</h3>";
+      header.innerHTML=`
+        <h2>${headerName}</h2>
+        <h3>SL NO: ${headerSL} | PACKET NO: ${headerPacket}</h3>
+      `;
       page.appendChild(header);
     }
 
